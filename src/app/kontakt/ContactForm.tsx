@@ -1,6 +1,21 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useRef, useEffect, useCallback, FormEvent } from "react";
+
+declare global {
+  interface Window {
+    turnstile: {
+      render: (
+        element: HTMLElement,
+        options: Record<string, unknown>
+      ) => string;
+      reset: (widgetId: string) => void;
+      remove: (widgetId: string) => void;
+    };
+  }
+}
+
+const TURNSTILE_SITE_KEY = "0x4AAAAAACobOvQzwa-91WFL";
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({
@@ -12,11 +27,57 @@ export default function ContactForm() {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
     "idle"
   );
-
   const [errorMsg, setErrorMsg] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileRef = useRef<HTMLDivElement>(null);
+  const widgetIdRef = useRef<string | null>(null);
+
+  const renderWidget = useCallback(() => {
+    if (
+      turnstileRef.current &&
+      window.turnstile &&
+      widgetIdRef.current === null
+    ) {
+      widgetIdRef.current = window.turnstile.render(turnstileRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        callback: (token: string) => setTurnstileToken(token),
+        "expired-callback": () => setTurnstileToken(""),
+        theme: "light",
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (window.turnstile) {
+      renderWidget();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src =
+      "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    script.async = true;
+    script.onload = () => renderWidget();
+    document.head.appendChild(script);
+
+    return () => {
+      if (widgetIdRef.current !== null && window.turnstile) {
+        window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
+      }
+    };
+  }, [renderWidget]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
+    if (!turnstileToken) {
+      setStatus("error");
+      setErrorMsg("Prosím, dokončite overenie (Turnstile).");
+      setTimeout(() => setStatus("idle"), 5000);
+      return;
+    }
+
     setStatus("sending");
     setErrorMsg("");
 
@@ -24,7 +85,7 @@ export default function ContactForm() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, turnstileToken }),
       });
 
       const data = await res.json();
@@ -32,6 +93,10 @@ export default function ContactForm() {
       if (res.ok && data.success) {
         setStatus("sent");
         setFormData({ name: "", email: "", phone: "", message: "" });
+        setTurnstileToken("");
+        if (widgetIdRef.current !== null && window.turnstile) {
+          window.turnstile.reset(widgetIdRef.current);
+        }
         setTimeout(() => setStatus("idle"), 5000);
       } else {
         setStatus("error");
@@ -130,6 +195,8 @@ export default function ContactForm() {
             placeholder="Vaša správa..."
           />
         </div>
+
+        <div ref={turnstileRef} className="flex justify-center" />
 
         <button
           type="submit"

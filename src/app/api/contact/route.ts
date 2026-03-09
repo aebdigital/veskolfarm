@@ -2,13 +2,44 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, phone, message } = await request.json();
+    const { name, email, phone, message, turnstileToken } =
+      await request.json();
 
     // Validate required fields
     if (!name || !email || !message) {
       return NextResponse.json(
         { error: "Meno, email a správa sú povinné polia." },
         { status: 400 }
+      );
+    }
+
+    // Verify Turnstile token
+    const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
+    if (!turnstileSecret) {
+      console.error("TURNSTILE_SECRET_KEY is not set");
+      return NextResponse.json(
+        { error: "Konfiguračná chyba servera." },
+        { status: 500 }
+      );
+    }
+
+    const turnstileRes = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          secret: turnstileSecret,
+          response: turnstileToken,
+        }),
+      }
+    );
+    const turnstileData = await turnstileRes.json();
+
+    if (!turnstileData.success) {
+      return NextResponse.json(
+        { error: "Overenie zlyhalo. Skúste to znova." },
+        { status: 403 }
       );
     }
 
