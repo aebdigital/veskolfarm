@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import GalleryGrid from "./GalleryGrid";
+import fs from "fs";
+import path from "path";
 
 export const metadata: Metadata = {
   title: "Galéria | Veskol – Rodinná farma",
@@ -8,12 +10,18 @@ export const metadata: Metadata = {
     "Fotogaléria z rodinnej farmy Veskol pri Kolárove – hovädzí dobytok, ošípané a mangalice v ich prirodzenom prostredí.",
 };
 
-const galleryImages = Array.from({ length: 19 }, (_, i) => ({
-  src: `/images/gallery-${String(i + 1).padStart(2, "0")}.jpg`,
-  alt: `VESKOL Farm galéria ${i + 1}`,
-}));
-
 export default function GaleriaPage() {
+  // Get all images from the gallery-farm directory
+  const galleryDir = path.join(process.cwd(), "public/images/gallery-farm");
+  const files = fs.readdirSync(galleryDir)
+    .filter((file) => /\.(webp|jpg|jpeg|png)$/i.test(file))
+    .sort();
+
+  const galleryImages = files.map((file, i) => ({
+    src: `/images/gallery-farm/${file}`,
+    alt: `VESKOL Farm galéria ${i + 1}`,
+  }));
+
   return (
     <main>
       {/* Hero */}
