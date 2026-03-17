@@ -10,12 +10,36 @@ export const metadata: Metadata = {
     "Fotogaléria z rodinnej farmy Veskol pri Kolárove – hovädzí dobytok, ošípané a mangalice v ich prirodzenom prostredí.",
 };
 
+// Simple deterministic shuffle function
+function shuffleDeterministic<T>(array: T[], seed: number): T[] {
+  const shuffled = [...array];
+  let m = shuffled.length, t, i;
+  
+  // Custom pseudo-random generator
+  const random = (s: number) => {
+    const x = Math.sin(s) * 10000;
+    return x - Math.floor(x);
+  };
+
+  while (m) {
+    i = Math.floor(random(seed + m) * m--);
+    t = shuffled[m];
+    shuffled[m] = shuffled[i];
+    shuffled[i] = t;
+  }
+  return shuffled;
+}
+
 export default function GaleriaPage() {
   // Get all images from the gallery-farm directory
   const galleryDir = path.join(process.cwd(), "public/images/gallery-farm");
-  const files = fs.readdirSync(galleryDir)
+  let files = fs.readdirSync(galleryDir)
     .filter((file) => /\.(webp|jpg|jpeg|png)$/i.test(file))
     .sort();
+
+  // Mix up the photos so similar ones (bursts) are separated
+  // We use a fixed seed to keep the order stable across reloads
+  files = shuffleDeterministic(files, 42);
 
   const galleryImages = files.map((file, i) => ({
     src: `/images/gallery-farm/${file}`,
@@ -27,12 +51,12 @@ export default function GaleriaPage() {
       {/* Hero */}
       <section className="relative flex min-h-[42vh] items-center justify-center overflow-hidden md:min-h-[60vh]">
         <Image
-          src="/images/hero-bg.jpg"
+          src="/images/gallery-farm/GE3A4070.webp"
           alt="Galéria VESKOL Farm"
           fill
           className="object-cover"
           priority
-          quality={85}
+          quality={90}
         />
         <div className="absolute inset-0 bg-black/55" />
         <div className="relative z-10 text-center">
