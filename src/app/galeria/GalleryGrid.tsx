@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import ScrollReveal from "@/components/ScrollReveal";
 
@@ -15,7 +16,12 @@ export default function GalleryGrid({ images }: { images: GalleryImage[] }) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [visibleCount, setVisibleCount] = useState(IMAGES_PER_PAGE);
   const [columnCount, setColumnCount] = useState(1);
+  const [mounted, setMounted] = useState(false);
   const loaderRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Handle responsive column count
   useEffect(() => {
@@ -70,7 +76,7 @@ export default function GalleryGrid({ images }: { images: GalleryImage[] }) {
           setVisibleCount((prev) => Math.min(prev + IMAGES_PER_PAGE, images.length));
         }
       },
-      { threshold: 0.1, rootMargin: "400px" } // Increased rootMargin for smoother loading
+      { threshold: 0.1, rootMargin: "400px" }
     );
 
     if (loaderRef.current) {
@@ -94,6 +100,67 @@ export default function GalleryGrid({ images }: { images: GalleryImage[] }) {
     
     return cols;
   }, [visibleCount, columnCount, images]);
+
+  const lightboxContent = lightboxIndex !== null && mounted ? (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 backdrop-blur-md"
+      style={{ isolation: "isolate" }}
+      onClick={closeLightbox}
+    >
+      {/* Close button */}
+      <button
+        onClick={closeLightbox}
+        className="absolute top-6 right-6 z-[10000] p-4 text-4xl text-white/70 transition-colors hover:text-white"
+        aria-label="Zavrieť"
+      >
+        ✕
+      </button>
+
+      {/* Prev button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          navigate(-1);
+        }}
+        className="absolute left-4 z-[10000] rounded-full bg-white/10 p-4 text-3xl text-white/70 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white sm:left-8"
+        aria-label="Predchádzajúca"
+      >
+        ‹
+      </button>
+
+      {/* Image Container with height limit */}
+      <div
+        className="relative flex h-[85vh] w-[90vw] items-center justify-center md:h-[90vh] md:w-[85vw]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Image
+          src={images[lightboxIndex].src}
+          alt={images[lightboxIndex].alt}
+          fill
+          className="pointer-events-none select-none object-contain"
+          quality={95}
+          priority
+        />
+      </div>
+
+      {/* Next button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          navigate(1);
+        }}
+        className="absolute right-4 z-[10000] rounded-full bg-white/10 p-4 text-3xl text-white/70 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white sm:right-8"
+        aria-label="Nasledujúca"
+      >
+        ›
+      </button>
+
+      {/* Counter */}
+      <div className="absolute bottom-6 left-1/2 z-[10000] -translate-x-1/2 rounded-full bg-white/10 px-6 py-2 text-base font-semibold text-white/80 backdrop-blur-sm">
+        {lightboxIndex + 1} / {images.length}
+      </div>
+    </div>
+  ) : null;
 
   return (
     <>
@@ -129,68 +196,8 @@ export default function GalleryGrid({ images }: { images: GalleryImage[] }) {
         </div>
       )}
 
-      {/* Lightbox */}
-      {lightboxIndex !== null && (
-        <div
-          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/95 backdrop-blur-md"
-          onClick={closeLightbox}
-        >
-          {/* Close button */}
-          <button
-            onClick={closeLightbox}
-            className="absolute top-6 right-6 z-20 text-4xl text-white/70 transition-colors hover:text-white"
-            aria-label="Zavrieť"
-          >
-            ✕
-          </button>
-
-          {/* Prev button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(-1);
-            }}
-            className="absolute left-4 z-20 rounded-full bg-white/10 p-4 text-3xl text-white/70 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white"
-            aria-label="Predchádzajúca"
-          >
-            ‹
-          </button>
-
-          {/* Image */}
-          <div
-            className="relative flex h-full w-full items-center justify-center p-4 md:p-12"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="relative h-full w-full">
-              <Image
-                src={images[lightboxIndex].src}
-                alt={images[lightboxIndex].alt}
-                fill
-                className="object-contain"
-                quality={95}
-                priority
-              />
-            </div>
-          </div>
-
-          {/* Next button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(1);
-            }}
-            className="absolute right-4 z-20 rounded-full bg-white/10 p-4 text-3xl text-white/70 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white"
-            aria-label="Nasledujúca"
-          >
-            ›
-          </button>
-
-          {/* Counter */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-6 py-2 text-base font-semibold text-white/80 backdrop-blur-sm">
-            {lightboxIndex + 1} / {images.length}
-          </div>
-        </div>
-      )}
+      {/* Lightbox via Portal */}
+      {lightboxIndex !== null && mounted && createPortal(lightboxContent, document.body)}
     </>
   );
 }
