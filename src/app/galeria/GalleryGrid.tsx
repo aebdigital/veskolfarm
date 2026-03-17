@@ -113,14 +113,15 @@ export default function GalleryGrid({ images }: { images: GalleryImage[] }) {
                   onClick={() => openLightbox(originalIndex)}
                   className="group block w-full overflow-hidden rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-orange"
                 >
-                  <Image
-                    src={image.src}
-                    alt={image.alt}
-                    width={600}
-                    height={400}
-                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                    className="h-auto w-full object-cover transition-all duration-500 group-hover:scale-110 group-hover:brightness-90"
-                  />
+                  <div className="relative aspect-[3/2] w-full overflow-hidden">
+                    <Image
+                      src={image.src}
+                      alt={image.alt}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      className="object-cover transition-all duration-500 group-hover:scale-110 group-hover:brightness-90"
+                    />
+                  </div>
                 </button>
               </ScrollReveal>
             ))}
@@ -183,16 +184,16 @@ export default function GalleryGrid({ images }: { images: GalleryImage[] }) {
 
           {/* Image Container with height limit */}
           <div
-            key={images[lightboxIndex].src} // Key helps trigger a clean re-render for transitions
-            className="relative flex h-[85vh] w-[90vw] animate-in fade-in zoom-in-95 duration-300 items-center justify-center md:h-[90vh] md:w-[85vw]"
+            className="relative h-[80vh] w-[90vw] md:h-[85vh] md:w-[85vw]"
             onClick={(e) => e.stopPropagation()}
           >
             <Image
+              key={images[lightboxIndex].src}
               src={images[lightboxIndex].src}
               alt={images[lightboxIndex].alt}
               fill
-              className="pointer-events-none select-none object-contain"
-              quality={85} // Reduced from 95 for faster loading
+              className="pointer-events-none select-none object-contain transition-opacity duration-300"
+              quality={85}
               priority
             />
           </div>
