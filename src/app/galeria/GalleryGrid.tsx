@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import ScrollReveal from "@/components/ScrollReveal";
 
@@ -14,7 +14,22 @@ const IMAGES_PER_PAGE = 12;
 export default function GalleryGrid({ images }: { images: GalleryImage[] }) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [visibleCount, setVisibleCount] = useState(IMAGES_PER_PAGE);
+  const [columnCount, setColumnCount] = useState(1);
   const loaderRef = useRef<HTMLDivElement>(null);
+
+  // Handle responsive column count
+  useEffect(() => {
+    const updateColumnCount = () => {
+      if (window.innerWidth >= 1024) setColumnCount(4);
+      else if (window.innerWidth >= 768) setColumnCount(3);
+      else if (window.innerWidth >= 640) setColumnCount(2);
+      else setColumnCount(1);
+    };
+
+    updateColumnCount();
+    window.addEventListener("resize", updateColumnCount);
+    return () => window.removeEventListener("resize", updateColumnCount);
+  }, []);
 
   const openLightbox = useCallback((index: number) => {
     setLightboxIndex(index);
@@ -55,7 +70,7 @@ export default function GalleryGrid({ images }: { images: GalleryImage[] }) {
           setVisibleCount((prev) => Math.min(prev + IMAGES_PER_PAGE, images.length));
         }
       },
-      { threshold: 0.1, rootMargin: "200px" }
+      { threshold: 0.1, rootMargin: "400px" } // Increased rootMargin for smoother loading
     );
 
     if (loaderRef.current) {
@@ -65,26 +80,45 @@ export default function GalleryGrid({ images }: { images: GalleryImage[] }) {
     return () => observer.disconnect();
   }, [visibleCount, images.length]);
 
+  // Group images into columns for a better masonry effect
+  const columns = useMemo(() => {
+    const cols: { image: GalleryImage; originalIndex: number }[][] = Array.from(
+      { length: columnCount },
+      () => []
+    );
+    
+    // Distribute the visible images across columns
+    images.slice(0, visibleCount).forEach((image, index) => {
+      cols[index % columnCount].push({ image, originalIndex: index });
+    });
+    
+    return cols;
+  }, [visibleCount, columnCount, images]);
+
   return (
     <>
       {/* Grid */}
-      <div className="columns-1 gap-4 sm:columns-2 md:columns-3 lg:columns-4">
-        {images.slice(0, visibleCount).map((image, index) => (
-          <ScrollReveal key={image.src} delay={(index % 4) * 100}>
-            <button
-              onClick={() => openLightbox(index)}
-              className="group mb-4 block w-full overflow-hidden rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-orange"
-            >
-              <Image
-                src={image.src}
-                alt={image.alt}
-                width={600}
-                height={400}
-                sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                className="h-auto w-full object-cover transition-all duration-500 group-hover:scale-110 group-hover:brightness-90"
-              />
-            </button>
-          </ScrollReveal>
+      <div className="flex gap-4">
+        {columns.map((column, colIndex) => (
+          <div key={`col-${colIndex}`} className="flex flex-1 flex-col gap-4">
+            {column.map(({ image, originalIndex }) => (
+              <ScrollReveal key={image.src} delay={(originalIndex % 4) * 100}>
+                <button
+                  onClick={() => openLightbox(originalIndex)}
+                  className="group block w-full overflow-hidden rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-orange"
+                >
+                  <Image
+                    src={image.src}
+                    alt={image.alt}
+                    width={600}
+                    height={400}
+                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    className="h-auto w-full object-cover transition-all duration-500 group-hover:scale-110 group-hover:brightness-90"
+                  />
+                </button>
+              </ScrollReveal>
+            ))}
+          </div>
         ))}
       </div>
 
