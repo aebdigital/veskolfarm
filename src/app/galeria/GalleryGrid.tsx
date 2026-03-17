@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 import ScrollReveal from "@/components/ScrollReveal";
 
@@ -9,8 +9,12 @@ interface GalleryImage {
   alt: string;
 }
 
+const IMAGES_PER_PAGE = 12;
+
 export default function GalleryGrid({ images }: { images: GalleryImage[] }) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [visibleCount, setVisibleCount] = useState(IMAGES_PER_PAGE);
+  const loaderRef = useRef<HTMLDivElement>(null);
 
   const openLightbox = useCallback((index: number) => {
     setLightboxIndex(index);
@@ -43,11 +47,29 @@ export default function GalleryGrid({ images }: { images: GalleryImage[] }) {
     return () => window.removeEventListener("keydown", handleKey);
   }, [lightboxIndex, closeLightbox, navigate]);
 
+  // Infinite scroll logic
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && visibleCount < images.length) {
+          setVisibleCount((prev) => Math.min(prev + IMAGES_PER_PAGE, images.length));
+        }
+      },
+      { threshold: 0.1, rootMargin: "200px" }
+    );
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [visibleCount, images.length]);
+
   return (
     <>
       {/* Grid */}
       <div className="columns-1 gap-4 sm:columns-2 md:columns-3 lg:columns-4">
-        {images.map((image, index) => (
+        {images.slice(0, visibleCount).map((image, index) => (
           <ScrollReveal key={image.src} delay={(index % 4) * 100}>
             <button
               onClick={() => openLightbox(index)}
@@ -58,12 +80,20 @@ export default function GalleryGrid({ images }: { images: GalleryImage[] }) {
                 alt={image.alt}
                 width={600}
                 height={400}
+                sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 className="h-auto w-full object-cover transition-all duration-500 group-hover:scale-110 group-hover:brightness-90"
               />
             </button>
           </ScrollReveal>
         ))}
       </div>
+
+      {/* Loading Trigger */}
+      {visibleCount < images.length && (
+        <div ref={loaderRef} className="flex justify-center py-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange border-t-transparent" />
+        </div>
+      )}
 
       {/* Lightbox */}
       {lightboxIndex !== null && (
@@ -104,6 +134,7 @@ export default function GalleryGrid({ images }: { images: GalleryImage[] }) {
               height={800}
               className="max-h-[85vh] w-auto rounded-lg object-contain"
               quality={90}
+              priority
             />
           </div>
 
