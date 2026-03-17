@@ -132,13 +132,13 @@ export default function GalleryGrid({ images }: { images: GalleryImage[] }) {
       {/* Lightbox */}
       {lightboxIndex !== null && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/95 backdrop-blur-md"
           onClick={closeLightbox}
         >
           {/* Close button */}
           <button
             onClick={closeLightbox}
-            className="absolute top-6 right-6 z-10 text-4xl text-white/70 transition-colors hover:text-white"
+            className="absolute top-6 right-6 z-20 text-4xl text-white/70 transition-colors hover:text-white"
             aria-label="Zavrieť"
           >
             ✕
@@ -150,7 +150,7 @@ export default function GalleryGrid({ images }: { images: GalleryImage[] }) {
               e.stopPropagation();
               navigate(-1);
             }}
-            className="absolute left-4 z-10 rounded-full bg-white/10 p-3 text-2xl text-white/70 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white"
+            className="absolute left-4 z-20 rounded-full bg-white/10 p-4 text-3xl text-white/70 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white"
             aria-label="Predchádzajúca"
           >
             ‹
@@ -158,18 +158,19 @@ export default function GalleryGrid({ images }: { images: GalleryImage[] }) {
 
           {/* Image */}
           <div
-            className="relative max-h-[85vh] max-w-[90vw]"
+            className="relative flex h-full w-full items-center justify-center p-4 md:p-12"
             onClick={(e) => e.stopPropagation()}
           >
-            <Image
-              src={images[lightboxIndex].src}
-              alt={images[lightboxIndex].alt}
-              width={1200}
-              height={800}
-              className="max-h-[85vh] w-auto rounded-lg object-contain"
-              quality={90}
-              priority
-            />
+            <div className="relative h-full w-full">
+              <Image
+                src={images[lightboxIndex].src}
+                alt={images[lightboxIndex].alt}
+                fill
+                className="object-contain"
+                quality={95}
+                priority
+              />
+            </div>
           </div>
 
           {/* Next button */}
@@ -178,14 +179,14 @@ export default function GalleryGrid({ images }: { images: GalleryImage[] }) {
               e.stopPropagation();
               navigate(1);
             }}
-            className="absolute right-4 z-10 rounded-full bg-white/10 p-3 text-2xl text-white/70 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white"
+            className="absolute right-4 z-20 rounded-full bg-white/10 p-4 text-3xl text-white/70 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white"
             aria-label="Nasledujúca"
           >
             ›
           </button>
 
           {/* Counter */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 text-sm text-white/70 backdrop-blur-sm">
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-6 py-2 text-base font-semibold text-white/80 backdrop-blur-sm">
             {lightboxIndex + 1} / {images.length}
           </div>
         </div>
