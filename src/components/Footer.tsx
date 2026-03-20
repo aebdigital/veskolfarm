@@ -52,11 +52,16 @@ export default function Footer() {
             </nav>
           </div>
 
-          {/* Address - empty */}
+          {/* Address */}
           <div>
             <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-orange">
               Adresa
             </h3>
+            <p className="text-sm leading-relaxed text-gray-400">
+              Veľký Ostrov 15935
+              <br />
+              946 03 Kolárovo
+            </p>
           </div>
 
           {/* Contact */}

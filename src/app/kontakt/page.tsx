@@ -5,7 +5,7 @@ import ContactForm from "./ContactForm";
 export const metadata: Metadata = {
   title: "Kontakt | Veskol – Rodinná farma",
   description:
-    "Kontaktujte rodinnu farmu Veskol – VESKOL-Farm s. r. o., Partizánska 2619/1, 946 03 Kolárovo. Telefón: +421 907 214 361.",
+    "Kontaktujte rodinnu farmu Veskol – VESKOL-Farm s. r. o., Veľký Ostrov 15935, 946 03 Kolárovo. Telefón: +421 907 214 361.",
 };
 
 export default function KontaktPage() {
@@ -76,7 +76,7 @@ export default function KontaktPage() {
                   <p className="mt-1 text-sm text-[#6a6a6a]">
                     VESKOL-Farm s. r. o.
                     <br />
-                    Partizánska 2619/1
+                    Veľký Ostrov 15935
                     <br />
                     946 03 Kolárovo
                   </p>
