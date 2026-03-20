@@ -74,8 +74,6 @@ export default function KontaktPage() {
                     Adresa
                   </h3>
                   <p className="mt-1 text-sm text-[#6a6a6a]">
-                    VESKOL-Farm s. r. o.
-                    <br />
                     Veľký Ostrov 15935
                     <br />
                     946 03 Kolárovo
@@ -165,6 +163,8 @@ export default function KontaktPage() {
                     Firemné údaje
                   </h3>
                   <p className="mt-1 text-sm text-[#6a6a6a]">
+                    VESKOL-Farm s. r. o.
+                    <br />
                     IČO: 54240239
                     <br />
                     IČ DPH: SK2121608313
