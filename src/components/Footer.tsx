@@ -23,7 +23,7 @@ export default function Footer() {
           {/* Logo */}
           <div>
             <Image
-              src="/images/logo.png"
+              src="/images/dark-new.png"
               alt="VESKOL Farm"
               width={160}
               height={56}
